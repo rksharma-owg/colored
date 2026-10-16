@@ -38,6 +38,7 @@ jobs:
     name: "${{ matrix.os }}:cargo-clippy@stable"
     runs-on: "${{ matrix.os }}-latest"
     strategy:
+      fail-fast: false
       matrix:
         os: ["ubuntu", "windows", "macos"]
     steps:
@@ -63,6 +64,7 @@ jobs:
     name: "${{ matrix.os }}:cargo-test@${{ matrix.version }}"
     runs-on: "${{ matrix.os }}-latest"
     strategy:
+      fail-fast: false
       matrix:
         os: ["ubuntu", "windows", "macos"]
         version: ["stable", "beta", "1.80"]
