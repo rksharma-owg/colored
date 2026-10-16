@@ -62,3 +62,18 @@ jobs:
         uses: actions/checkout@v4
       - name: Check semver
         uses: obi1kenobi/cargo-semver-checks-action@v2
+
+  loom:
+    name: Loom override model
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+      - name: Check override interleavings
+        run: cargo test --lib control::loom_tests --release
+        env:
+          RUSTFLAGS: --cfg loom
