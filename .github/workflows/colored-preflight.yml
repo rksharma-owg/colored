@@ -1,0 +1,104 @@
+name: Colored fork preflight
+on:
+  push:
+    branches: [codex/ci-colored-229]
+  workflow_dispatch:
+permissions:
+  contents: read
+env:
+  TESTED_SHA: 5204a26619e10fda0adc77f07588811d6102a40d
+  BASELINE_SHA: 5204a26619e10fda0adc77f07588811d6102a40d
+  CLICOLOR_FORCE: 1
+  COLORTERM: "truecolor"
+
+jobs:
+  cargo-fmt:
+    name: cargo-fmt@stable
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TESTED_SHA }}
+          fetch-depth: 0
+      - name: Verify tested source commit
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = "$TESTED_SHA"
+          git show --no-patch --format='%H %T' HEAD
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+          components: rustfmt
+      - name: Run formatting checks
+        run: cargo fmt --check
+
+  cargo-clippy:
+    name: "${{ matrix.os }}:cargo-clippy@stable"
+    runs-on: "${{ matrix.os }}-latest"
+    strategy:
+      matrix:
+        os: ["ubuntu", "windows", "macos"]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TESTED_SHA }}
+          fetch-depth: 0
+      - name: Verify tested source commit
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = "$TESTED_SHA"
+          git show --no-patch --format='%H %T' HEAD
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+          components: clippy
+      - name: Run clippy checks
+        run: cargo clippy --all-features -- -D warnings
+
+  cargo-test:
+    name: "${{ matrix.os }}:cargo-test@${{ matrix.version }}"
+    runs-on: "${{ matrix.os }}-latest"
+    strategy:
+      matrix:
+        os: ["ubuntu", "windows", "macos"]
+        version: ["stable", "beta", "1.80"]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TESTED_SHA }}
+          fetch-depth: 0
+      - name: Verify tested source commit
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = "$TESTED_SHA"
+          git show --no-patch --format='%H %T' HEAD
+      - name: Install Rust ${{ matrix.version }}
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.version }}
+      - name: Run tests
+        run: cargo test
+
+  check-semver:
+    name: Check semver compatibility
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TESTED_SHA }}
+          fetch-depth: 0
+      - name: Verify tested source commit
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = "$TESTED_SHA"
+          git show --no-patch --format='%H %T' HEAD
+      - name: Check semver
+        uses: obi1kenobi/cargo-semver-checks-action@v2
+        with:
+          baseline-rev: ${{ env.BASELINE_SHA }}
