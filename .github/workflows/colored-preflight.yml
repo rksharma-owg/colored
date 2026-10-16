@@ -6,7 +6,7 @@ on:
 permissions:
   contents: read
 env:
-  TESTED_SHA: 5204a26619e10fda0adc77f07588811d6102a40d
+  TESTED_SHA: 1c58c45fb6174fb3000edd7584f095ac0916af95
   BASELINE_SHA: 5204a26619e10fda0adc77f07588811d6102a40d
   CLICOLOR_FORCE: 1
   COLORTERM: "truecolor"
@@ -104,3 +104,26 @@ jobs:
         uses: obi1kenobi/cargo-semver-checks-action@v2
         with:
           baseline-rev: ${{ env.BASELINE_SHA }}
+
+  loom:
+    name: Loom override model
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TESTED_SHA }}
+          fetch-depth: 0
+      - name: Verify tested source commit
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = "$TESTED_SHA"
+          git show --no-patch --format='%H %T' HEAD
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+      - name: Check override interleavings
+        run: cargo test --lib control::loom_tests --release
+        env:
+          RUSTFLAGS: --cfg loom
