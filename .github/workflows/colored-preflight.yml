@@ -2,11 +2,12 @@ name: Colored fork preflight
 on:
   push:
     branches: [codex/ci-colored-229]
+    paths: [.github/workflows/colored-preflight.yml]
   workflow_dispatch:
 permissions:
   contents: read
 env:
-  TESTED_SHA: 1c58c45fb6174fb3000edd7584f095ac0916af95
+  TESTED_SHA: c48b0127af64f1a281692337ff81eb4a2b0cad3f
   BASELINE_SHA: 5204a26619e10fda0adc77f07588811d6102a40d
   CLICOLOR_FORCE: 1
   COLORTERM: "truecolor"
@@ -79,6 +80,15 @@ jobs:
         run: |
           test "$(git rev-parse HEAD)" = "$TESTED_SHA"
           git show --no-patch --format='%H %T' HEAD
+      # Resolve against package.rust-version with modern Cargo, then compile with the MSRV.
+      - name: Install Cargo with MSRV-aware resolution
+        if: matrix.version == '1.80'
+        uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+      - name: Resolve MSRV-compatible test dependencies
+        if: matrix.version == '1.80'
+        run: cargo +stable generate-lockfile
+        env:
+          CARGO_RESOLVER_INCOMPATIBLE_RUST_VERSIONS: fallback
       - name: Install Rust ${{ matrix.version }}
         uses: dtolnay/rust-toolchain@master
         with:

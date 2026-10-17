@@ -2,6 +2,7 @@ name: Colored independent repair validation
 on:
   push:
     branches: [codex/ci-colored-229]
+    paths: [.github/workflows/colored-repairs.yml]
 permissions:
   contents: read
 env:
