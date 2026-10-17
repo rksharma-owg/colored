@@ -1,0 +1,58 @@
+name: Colored independent repair validation
+on:
+  push:
+    branches: [codex/ci-colored-229]
+permissions:
+  contents: read
+env:
+  CLICOLOR_FORCE: 1
+  COLORTERM: truecolor
+jobs:
+  clippy:
+    env:
+      TESTED_SHA: 43bac4e002c0b9979b6092003a857fbcd17f3173
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TESTED_SHA }}
+          fetch-depth: 0
+      - name: Verify tested source commit
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = "$TESTED_SHA"
+          git show --no-patch --format='%H %T' HEAD
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec
+        with:
+          components: clippy
+      - run: cargo clippy --all-features -- -D warnings
+  msrv:
+    env:
+      TESTED_SHA: b3266d02f5e14eca4991ee752b56bcdfb65a0cf4
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TESTED_SHA }}
+          fetch-depth: 0
+      - name: Verify tested source commit
+        shell: bash
+        run: |
+          test "$(git rev-parse HEAD)" = "$TESTED_SHA"
+          git show --no-patch --format='%H %T' HEAD
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec
+      - run: cargo +stable generate-lockfile
+        env:
+          CARGO_RESOLVER_INCOMPATIBLE_RUST_VERSIONS: fallback
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: '1.80'
+      - run: cargo test --locked
