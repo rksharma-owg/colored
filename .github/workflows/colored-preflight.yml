@@ -7,7 +7,7 @@ on:
 permissions:
   contents: read
 env:
-  TESTED_SHA: c48b0127af64f1a281692337ff81eb4a2b0cad3f
+  TESTED_SHA: 848b2c77336dfe3df97bb7cda5db147351471c41
   BASELINE_SHA: 5204a26619e10fda0adc77f07588811d6102a40d
   CLICOLOR_FORCE: 1
   COLORTERM: "truecolor"
@@ -130,7 +130,7 @@ jobs:
           test "$(git rev-parse HEAD)" = "$TESTED_SHA"
           git show --no-patch --format='%H %T' HEAD
       - name: Install Rust stable
-        uses: dtolnay/rust-toolchain@master
+        uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
         with:
           toolchain: stable
       - name: Check override interleavings
